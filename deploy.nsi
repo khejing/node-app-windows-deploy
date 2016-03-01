@@ -24,6 +24,13 @@
   RequestExecutionLevel admin
 
 ;--------------------------------
+;Macros
+
+!macro "CreateURLShortCut" "URLFile" "URLSite"
+  WriteINIStr "${URLFile}.URL" "InternetShortcut" "URL" "${URLSite}"
+!macroend
+
+;--------------------------------
 ;Variables
 
   Var StartMenuFolder
@@ -32,6 +39,14 @@
 ;Interface Settings
 
   !define MUI_ABORTWARNING
+
+;--------------------------------
+;Language Selection Dialog Settings
+
+  ;Remember the installer language
+  !define MUI_LANGDLL_REGISTRY_ROOT "HKCU"
+  !define MUI_LANGDLL_REGISTRY_KEY "Software\PrivateCloud"
+  !define MUI_LANGDLL_REGISTRY_VALUENAME "Installer Language"
 
 ;--------------------------------
 ;Pages
@@ -55,6 +70,16 @@
 ;Languages
  
   !insertmacro MUI_LANGUAGE "English"
+  !insertmacro MUI_LANGUAGE "SimpChinese"
+
+;--------------------------------
+;Reserve Files
+
+  ;If you are using solid compression, files that are required before
+  ;the actual installation should be stored first in the data block,
+  ;because this will make your installer start faster.
+
+  !insertmacro MUI_RESERVEFILE_LANGDLL
 
 ;--------------------------------
 ;Installer Sections
@@ -86,15 +111,29 @@ Section "PrivateCloud"
     ;Create shortcuts
     CreateDirectory "$SMPROGRAMS\$StartMenuFolder"
     CreateShortCut "$SMPROGRAMS\$StartMenuFolder\Uninstall Private Cloud.lnk" "$INSTDIR\uninstall.exe" "" "$INSTDIR\uninstall.exe" 0
-    ;CreateShortCut "$SMPROGRAMS\$StartMenuFolder\Private Cloud App.url" "http://localhost:30000"
+    !insertmacro "CreateURLShortCut" "$SMPROGRAMS\$StartMenuFolder\Private Cloud App" "http://localhost:30000"
 
   !insertmacro MUI_STARTMENU_WRITE_END
 
   nsExec::Exec '"$INSTDIR\nssm.exe" install PrivateCloud "$INSTDIR\node.exe" "$LOCALAPPDATA\PrivateCloud\server.js"'
+  nsExec::Exec '"$INSTDIR\nssm.exe" set PrivateCloud AppEnvironmentExtra "NODE_ENV=production"'
+  nsExec::Exec '"$INSTDIR\nssm.exe" set PrivateCloud Start SERVICE_AUTO_START'
+  nsExec::Exec '"$INSTDIR\nssm.exe" set PrivateCloud AppExit Default Restart'
+  nsExec::Exec '"$INSTDIR\nssm.exe" set PrivateCloud AppRestartDelay 0'
+  nsExec::Exec '"$INSTDIR\nssm.exe" set PrivateCloud AppThrottle 1500'
   nsExec::Exec '"$INSTDIR\nssm.exe" start PrivateCloud'
   ExecShell open "http://localhost:30000"
 
 SectionEnd
+
+;--------------------------------
+;Installer Functions
+
+Function .onInit
+
+  !insertmacro MUI_LANGDLL_DISPLAY
+
+FunctionEnd
 
 ;--------------------------------
 ; Uninstaller
@@ -121,3 +160,11 @@ Section "Uninstall"
 
 SectionEnd
 
+;--------------------------------
+;Uninstaller Functions
+
+Function un.onInit
+
+  !insertmacro MUI_UNGETLANGUAGE
+
+FunctionEnd
