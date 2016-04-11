@@ -9,16 +9,16 @@
 ;General
 
   ;Name and file
-  Name "PrivateCloud"
+  Name "Xcloud"
 
   ; The file to write
-  OutFile "PrivateCloudSetup.exe"
+  OutFile "XcloudSetup.exe"
 
   ; The default installation directory
-  InstallDir $PROGRAMFILES\PrivateCloud
+  InstallDir $PROGRAMFILES\Xcloud
 
   ;Get installation folder from registry if available
-  InstallDirRegKey HKCU "Software\PrivateCloud" ""
+  InstallDirRegKey HKCU "Software\Xcloud" ""
 
   ; Request application privileges for Windows Vista
   RequestExecutionLevel admin
@@ -34,6 +34,7 @@
 ;Variables
 
   Var StartMenuFolder
+  Var ProgramName
 
 ;--------------------------------
 ;Interface Settings
@@ -45,7 +46,7 @@
 
   ;Remember the installer language
   !define MUI_LANGDLL_REGISTRY_ROOT "HKCU"
-  !define MUI_LANGDLL_REGISTRY_KEY "Software\PrivateCloud"
+  !define MUI_LANGDLL_REGISTRY_KEY "Software\$ProgramName"
   !define MUI_LANGDLL_REGISTRY_VALUENAME "Installer Language"
 
 ;--------------------------------
@@ -56,7 +57,7 @@
 
   ;Start Menu Folder Page Configuration
   !define MUI_STARTMENUPAGE_REGISTRY_ROOT "HKCU" 
-  !define MUI_STARTMENUPAGE_REGISTRY_KEY "Software\PrivateCloud" 
+  !define MUI_STARTMENUPAGE_REGISTRY_KEY "Software\$ProgramName"
   !define MUI_STARTMENUPAGE_REGISTRY_VALUENAME "Start Menu Folder"
 
   !insertmacro MUI_PAGE_STARTMENU Application $StartMenuFolder
@@ -84,7 +85,7 @@
 ;--------------------------------
 ;Installer Sections
 
-Section "PrivateCloud"
+Section "Xcloud"
 
   ; Set output path to the installation directory.
   SetOutPath $INSTDIR
@@ -92,17 +93,17 @@ Section "PrivateCloud"
   File "node.exe"
   File "nssm.exe"
 
-  SetOutPath "$LOCALAPPDATA\PrivateCloud"
-  File /r "..\privateCloud\*.*"
-  
+  SetOutPath "$LOCALAPPDATA\$ProgramName"
+  File /r /x ".git" "..\xcloud-private-deployment\*.*"
+
   ; Write the installation path into the registry
-  WriteRegStr HKCU SOFTWARE\PrivateCloud "" $INSTDIR
-  
+  WriteRegStr HKCU SOFTWARE\$ProgramName "" $INSTDIR
+
   ; Write the uninstall keys for Windows
-  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\PrivateCloud" "DisplayName" "Private Cloud"
-  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\PrivateCloud" "UninstallString" '"$INSTDIR\uninstall.exe"'
-  WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\PrivateCloud" "NoModify" 1
-  WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\PrivateCloud" "NoRepair" 1
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\$ProgramName" "DisplayName" "$ProgramName"
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\$ProgramName" "UninstallString" '"$INSTDIR\uninstall.exe"'
+  WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\$ProgramName" "NoModify" 1
+  WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\$ProgramName" "NoRepair" 1
 
   WriteUninstaller "$INSTDIR\uninstall.exe"
 
@@ -110,18 +111,18 @@ Section "PrivateCloud"
 
     ;Create shortcuts
     CreateDirectory "$SMPROGRAMS\$StartMenuFolder"
-    CreateShortCut "$SMPROGRAMS\$StartMenuFolder\Uninstall Private Cloud.lnk" "$INSTDIR\uninstall.exe" "" "$INSTDIR\uninstall.exe" 0
-    !insertmacro "CreateURLShortCut" "$SMPROGRAMS\$StartMenuFolder\Private Cloud App" "http://localhost:30000"
+    CreateShortCut "$SMPROGRAMS\$StartMenuFolder\Uninstall $ProgramName.lnk" "$INSTDIR\uninstall.exe" "" "$INSTDIR\uninstall.exe" 0
+    !insertmacro "CreateURLShortCut" "$SMPROGRAMS\$StartMenuFolder\$ProgramName App" "http://localhost:30000"
 
   !insertmacro MUI_STARTMENU_WRITE_END
 
-  nsExec::Exec '"$INSTDIR\nssm.exe" install PrivateCloud "$INSTDIR\node.exe" "$LOCALAPPDATA\PrivateCloud\server.js"'
-  nsExec::Exec '"$INSTDIR\nssm.exe" set PrivateCloud AppEnvironmentExtra "NODE_ENV=production"'
-  nsExec::Exec '"$INSTDIR\nssm.exe" set PrivateCloud Start SERVICE_AUTO_START'
-  nsExec::Exec '"$INSTDIR\nssm.exe" set PrivateCloud AppExit Default Restart'
-  nsExec::Exec '"$INSTDIR\nssm.exe" set PrivateCloud AppRestartDelay 0'
-  nsExec::Exec '"$INSTDIR\nssm.exe" set PrivateCloud AppThrottle 1500'
-  nsExec::Exec '"$INSTDIR\nssm.exe" start PrivateCloud'
+  nsExec::Exec '"$INSTDIR\nssm.exe" install $ProgramName "$INSTDIR\node.exe" "$LOCALAPPDATA\$ProgramName\server.js"'
+  nsExec::Exec '"$INSTDIR\nssm.exe" set $ProgramName AppEnvironmentExtra "NODE_ENV=production"'
+  nsExec::Exec '"$INSTDIR\nssm.exe" set $ProgramName Start SERVICE_AUTO_START'
+  nsExec::Exec '"$INSTDIR\nssm.exe" set $ProgramName AppExit Default Restart'
+  nsExec::Exec '"$INSTDIR\nssm.exe" set $ProgramName AppRestartDelay 0'
+  nsExec::Exec '"$INSTDIR\nssm.exe" set $ProgramName AppThrottle 1500'
+  nsExec::Exec '"$INSTDIR\nssm.exe" start $ProgramName'
   ExecShell open "http://localhost:30000"
 
 SectionEnd
@@ -131,6 +132,7 @@ SectionEnd
 
 Function .onInit
 
+  StrCpy $ProgramName "Xcloud"
   !insertmacro MUI_LANGDLL_DISPLAY
 
 FunctionEnd
@@ -140,12 +142,12 @@ FunctionEnd
 
 Section "Uninstall"
 
-  nsExec::Exec '"$INSTDIR\nssm.exe" stop PrivateCloud'
-  nsExec::Exec '"$INSTDIR\nssm.exe" remove PrivateCloud confirm'
+  nsExec::Exec '"$INSTDIR\nssm.exe" stop $ProgramName'
+  nsExec::Exec '"$INSTDIR\nssm.exe" remove $ProgramName confirm'
 
-  DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\PrivateCloud"
+  DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\$ProgramName"
 
-  RMDir /r "$LOCALAPPDATA\PrivateCloud"
+  RMDir /r "$LOCALAPPDATA\$ProgramName"
 
   Delete $INSTDIR\node.exe
   Delete $INSTDIR\nssm.exe
@@ -154,7 +156,7 @@ Section "Uninstall"
   RMDir "$INSTDIR"
 
   !insertmacro MUI_STARTMENU_GETFOLDER Application $StartMenuFolder
-  DeleteRegKey HKCU SOFTWARE\PrivateCloud
+  DeleteRegKey HKCU SOFTWARE\$ProgramName
   Delete "$SMPROGRAMS\$StartMenuFolder\*.*"
   RMDir "$SMPROGRAMS\$StartMenuFolder"
 
@@ -165,6 +167,7 @@ SectionEnd
 
 Function un.onInit
 
+  StrCpy $ProgramName "Xcloud"
   !insertmacro MUI_UNGETLANGUAGE
 
 FunctionEnd
