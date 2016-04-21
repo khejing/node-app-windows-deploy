@@ -95,6 +95,7 @@ Section "Xcloud"
   ; Put file there
   File "node.exe"
   File "nssm.exe"
+  File "logo.ico"
 
   SetOutPath "$LOCALAPPDATA\$ProgramName"
   File /r /x ".git" "..\xcloud-private-deployment\*.*"
@@ -104,6 +105,7 @@ Section "Xcloud"
 
   ; Write the uninstall keys for Windows
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\$ProgramName" "DisplayName" "$ProgramName"
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\$ProgramName" "DisplayIcon" "$INSTDIR\logo.ico"
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\$ProgramName" "Publisher" "美通云动（北京）科技有限公司"
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\$ProgramName" "UninstallString" '"$INSTDIR\uninstall.exe"'
   WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\$ProgramName" "NoModify" 1
