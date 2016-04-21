@@ -23,6 +23,7 @@
   ; Request application privileges for Windows Vista
   RequestExecutionLevel admin
 
+  BrandingText "AllMobilize Inc."
 ;--------------------------------
 ;Macros
 
@@ -40,6 +41,8 @@
 ;Interface Settings
 
   !define MUI_ABORTWARNING
+  !define MUI_ICON "install.ico"
+  !define MUI_UNICON "uninstall.ico"
 
 ;--------------------------------
 ;Language Selection Dialog Settings
@@ -52,7 +55,7 @@
 ;--------------------------------
 ;Pages
 
-  !insertmacro MUI_PAGE_LICENSE "${NSISDIR}\Docs\Modern UI\License.txt"
+  !insertmacro MUI_PAGE_LICENSE "License.txt"
   !insertmacro MUI_PAGE_DIRECTORY
 
   ;Start Menu Folder Page Configuration
