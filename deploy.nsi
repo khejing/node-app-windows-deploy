@@ -97,7 +97,7 @@ Section "Xcloud"
   File "nssm.exe"
   File "logo.ico"
 
-  SetOutPath "$LOCALAPPDATA\$ProgramName"
+  SetOutPath "$INSTDIR\xcloud-private-deployment"
   File /r /x ".git" "..\xcloud-private-deployment\*.*"
 
   ; Write the installation path into the registry
@@ -122,7 +122,7 @@ Section "Xcloud"
 
   !insertmacro MUI_STARTMENU_WRITE_END
 
-  nsExec::Exec '"$INSTDIR\nssm.exe" install $ProgramName "$INSTDIR\node.exe" "$LOCALAPPDATA\$ProgramName\server.js"'
+  nsExec::Exec '"$INSTDIR\nssm.exe" install $ProgramName "$INSTDIR\node.exe" \"$INSTDIR\xcloud-private-deployment\server.js\"'
   nsExec::Exec '"$INSTDIR\nssm.exe" set $ProgramName AppEnvironmentExtra "NODE_ENV=production"'
   nsExec::Exec '"$INSTDIR\nssm.exe" set $ProgramName Start SERVICE_AUTO_START'
   nsExec::Exec '"$INSTDIR\nssm.exe" set $ProgramName AppExit Default Restart'
@@ -153,13 +153,7 @@ Section "Uninstall"
 
   DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\$ProgramName"
 
-  RMDir /r "$LOCALAPPDATA\$ProgramName"
-
-  Delete $INSTDIR\node.exe
-  Delete $INSTDIR\nssm.exe
-  Delete $INSTDIR\uninstall.exe
-
-  RMDir "$INSTDIR"
+  RMDir /r "$INSTDIR"
 
   !insertmacro MUI_STARTMENU_GETFOLDER Application $StartMenuFolder
   DeleteRegKey HKCU SOFTWARE\$ProgramName
